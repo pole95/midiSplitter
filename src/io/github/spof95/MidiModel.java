@@ -27,11 +27,13 @@ public class MidiModel {
 
     private Map<Integer, Integer> splitMap = new TreeMap<>();
 
-    private ListProperty<String> inputDevices = new SimpleListProperty<>(FXCollections.observableArrayList());
-    private ListProperty<String> outputDevices = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private ListProperty<String> inputDescriptions = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private ListProperty<String> outputDescriptions = new SimpleListProperty<>(FXCollections.observableArrayList());
     private ListProperty<String> noteList = new SimpleListProperty<>(FXCollections.observableArrayList());
 
-    private List<MidiDevice> devices = new ArrayList<>();
+    private List<MidiDevice> inDevices = new ArrayList<>();
+    private List<MidiDevice> outDevices = new ArrayList<>();
+
     private Receiver midiReceiver = null;
     private Transmitter midiTransmitter = null;
     private MidiSplitter splitter = new MidiSplitter();
@@ -60,7 +62,7 @@ public class MidiModel {
     }
 
     public void changeMidiInput(Number newval) {
-        MidiDevice device = devices.get(newval.intValue());
+        MidiDevice device = inDevices.get(newval.intValue());
         try {
             device.open();
             midiTransmitter = device.getTransmitter();
@@ -72,7 +74,7 @@ public class MidiModel {
     }
 
     public void changeMidiOutput(Number newval) {
-        MidiDevice device = devices.get(newval.intValue());
+        MidiDevice device = outDevices.get(newval.intValue());
         try {
             device.open();
             midiReceiver = device.getReceiver();
@@ -85,14 +87,22 @@ public class MidiModel {
     }
 
     public void getAllMidiDevices(boolean forceReload) {
-        if (devices.isEmpty() || forceReload) {
+        if (outDevices.isEmpty() || inDevices.isEmpty() || forceReload) {
+            outDevices.clear();
+            inDevices.clear();
             Info[] midiDeviceInfo = MidiSystem.getMidiDeviceInfo();
             for (int i = 0; i < midiDeviceInfo.length; i++) {
                 MidiDevice device;
                 try {
                     device = MidiSystem.getMidiDevice(midiDeviceInfo[i]);
-                    if (!(device instanceof Sequencer) && !(device instanceof Synthesizer))
-                        devices.add(device);
+                    int maxRx = device.getMaxReceivers();
+                    int maxTx = device.getMaxTransmitters();
+                    if (!(device instanceof Sequencer) && !(device instanceof Synthesizer)) {
+                        if (maxTx == 0)
+                            outDevices.add(device);
+                        if (maxRx == 0)
+                            inDevices.add(device);
+                    }
                 } catch (MidiUnavailableException e) {
                     System.err.println("Device not available: " + e);
                 }
@@ -104,15 +114,18 @@ public class MidiModel {
         return splitMap;
     }
 
-    public List<MidiDevice> devices() {
-        return devices;
+    public List<MidiDevice> outDevices() {
+        return outDevices;
+    }
+
+    public List<MidiDevice> inDevices() {
+        return inDevices;
     }
 
     public void closeAllMidiDevices() {
         splitter.close();
-        for (MidiDevice device : devices)
-            if (device.isOpen())
-                device.close();
+        outDevices.forEach(d -> d.close());
+        inDevices.forEach(d -> d.close());
     }
 
     public void setNoteList() {
@@ -120,26 +133,26 @@ public class MidiModel {
     }
 
     public void setPossibleInputs() {
-        inputDevices.addAll(generateDeviceInfo());
+        inputDescriptions.addAll(generateDeviceInfo(inDevices));
     }
 
     public void setPossibleOutputs() {
-        outputDevices.addAll(generateDeviceInfo());
+        outputDescriptions.addAll(generateDeviceInfo(outDevices));
     }
 
-    public ListProperty<String> inputDevices() {
-        return inputDevices;
+    public ListProperty<String> inputDescriptions() {
+        return inputDescriptions;
     }
 
-    public ListProperty<String> outputDevices() {
-        return outputDevices;
+    public ListProperty<String> outputDescriptions() {
+        return outputDescriptions;
     }
 
     public ListProperty<String> noteList() {
         return noteList;
     }
 
-    private List<String> generateDeviceInfo() {
+    private List<String> generateDeviceInfo(List<MidiDevice> devices) {
         List<String> deviceList = new ArrayList<>();
         for (MidiDevice device : devices)
             deviceList.add(device.getDeviceInfo().getName() + " - " + device.getDeviceInfo().getDescription());

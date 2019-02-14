@@ -47,12 +47,12 @@ public class MainController {
     public void setModel(MidiModel model) {
         this.model = model;
 
-        inputList.itemsProperty().bind(this.model.inputDevices());
+        inputList.itemsProperty().bind(this.model.inputDescriptions());
         inputList.setPromptText("Select Input Device");
         inputList.getSelectionModel().selectedIndexProperty()
                 .addListener((arg, oldv, newv) -> model.changeMidiInput(newv));
 
-        outputList.itemsProperty().bindBidirectional(this.model.outputDevices());
+        outputList.itemsProperty().bindBidirectional(this.model.outputDescriptions());
         outputList.setPromptText("Select Output Device");
         outputList.getSelectionModel().selectedIndexProperty()
                 .addListener((arg, oldv, newv) -> model.changeMidiOutput(newv));
