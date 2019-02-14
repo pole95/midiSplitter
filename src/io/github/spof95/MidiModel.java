@@ -110,6 +110,10 @@ public class MidiModel {
         }
     }
 
+    public MidiSplitter splitter() {
+        return splitter;
+    }
+
     public Map<Integer, Integer> splitMap() {
         return splitMap;
     }
