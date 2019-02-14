@@ -27,6 +27,7 @@ public class Main extends Application {
 
             MidiModel model = new MidiModel();
             model.getAllMidiDevices(true);
+            model.setPossibleInputs();
             model.setPossibleOutputs();
             controller.setModel(model);
 
