@@ -25,7 +25,7 @@ public class PianoView extends AnchorPane {
         for (Integer key : highlighted) {
             int midiOctave = (key / 12) - 2;
             if (midiOctave > -1)
-                octaves[midiOctave].toggle(key % 12, Color.BLACK);
+                octaves[midiOctave].toggle(key % 12, null);
         }
         highlighted.clear();
     }

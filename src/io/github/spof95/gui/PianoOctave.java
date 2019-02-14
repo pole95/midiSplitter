@@ -50,7 +50,8 @@ public class PianoOctave extends AnchorPane {
     }
 
     public void toggle(int key, Color highlight) {
-        octave[key].setFill((highlight == null) ? keyColors[key] : highlight);
+        octave[key].setFill((highlight == null) ? keyColors[key]
+                : (keyColors[key] == Color.BLACK) ? highlight.darker() : highlight);
 
     }
 

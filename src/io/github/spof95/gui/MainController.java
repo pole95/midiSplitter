@@ -1,5 +1,8 @@
 package io.github.spof95.gui;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
 import io.github.spof95.MidiModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -70,13 +73,14 @@ public class MainController {
                 int noteIdx = noteList.getSelectionModel().getSelectedIndex();
                 if (chnlIdx > -1 && noteIdx > -1) {
                     String note = noteList.getSelectionModel().getSelectedItem();
-                    piano.highlight(noteIdx + 21, channelColors[chnlIdx]);
                     String channel = channelInput.getSelectionModel().getSelectedItem();
                     tableEntries.add(new TableEntry(note, channel));
                     MainController.this.model.addSplit(note, chnlIdx);
+                    colorKeys();
                 }
             }
         });
+
         clearButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -86,6 +90,14 @@ public class MainController {
             }
         });
 
+    }
+
+    private void colorKeys() {
+        Map<Integer, Integer> map = model.splitMap();
+        for (Entry<Integer, Integer> entry : map.entrySet()) {
+            for (int i = entry.getKey(); i < 108; i++)
+                piano.highlight(i, channelColors[entry.getValue()]);
+        }
     }
 
     public static class TableEntry {

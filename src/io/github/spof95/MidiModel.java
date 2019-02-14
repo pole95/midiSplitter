@@ -100,6 +100,10 @@ public class MidiModel {
         }
     }
 
+    public Map<Integer, Integer> splitMap() {
+        return splitMap;
+    }
+
     public List<MidiDevice> devices() {
         return devices;
     }
