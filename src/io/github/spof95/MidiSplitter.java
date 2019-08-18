@@ -1,10 +1,11 @@
 package io.github.spof95;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
@@ -12,11 +13,13 @@ import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 
-public class MidiSplitter extends Observable implements Receiver, Transmitter {
+public class MidiSplitter implements Receiver, Transmitter {
 
     private Receiver receiver = null;
     private int[] channelMap = new int[88];
     private List<Integer> pressedKeys = new ArrayList<>();
+
+    private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     @Override
     public void send(MidiMessage message, long timeStamp) {
@@ -44,14 +47,13 @@ public class MidiSplitter extends Observable implements Receiver, Transmitter {
     }
 
     private void processKeyEvent(byte note, byte vel) {
-        synchronized (this) {
-            if (vel > 0)
-                pressedKeys.add(Integer.valueOf(Byte.toUnsignedInt(note)));
-            else
-                pressedKeys.remove(Integer.valueOf(Byte.toUnsignedInt(note)));
-        }
-        setChanged();
-        notifyObservers();
+        List<Integer> old = new ArrayList<>(pressedKeys);
+        if (vel > 0)
+            pressedKeys.add(Integer.valueOf(Byte.toUnsignedInt(note)));
+        else
+            pressedKeys.remove(Integer.valueOf(Byte.toUnsignedInt(note)));
+
+        pcs.firePropertyChange("pressedKeys", old, pressedKeys);
     }
 
     @Override
@@ -82,7 +84,7 @@ public class MidiSplitter extends Observable implements Receiver, Transmitter {
         Arrays.fill(channelMap, 0);
     }
 
-    public synchronized List<Integer> getPressedKeys() {
-        return pressedKeys;
+    public void addObserver(PropertyChangeListener l) {
+        pcs.addPropertyChangeListener("pressedKeys", l);
     }
 }

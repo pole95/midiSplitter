@@ -1,13 +1,12 @@
 package io.github.spof95.gui;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Observable;
-import java.util.Observer;
 
 import io.github.spof95.MidiModel;
-import io.github.spof95.MidiSplitter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -21,7 +20,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 
-public class MainController implements Observer {
+public class MainController implements PropertyChangeListener {
     @FXML
     ComboBox<String> inputList, outputList, noteList, channelInput;
     @FXML
@@ -69,7 +68,7 @@ public class MainController implements Observer {
         channelColumn.setCellValueFactory(new PropertyValueFactory<>("channel"));
 
         channelInput.setItems(channels);
-        observe(this.model.splitter());
+        this.model.splitter().addObserver(this);
 
         addButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -124,15 +123,14 @@ public class MainController implements Observer {
 
     }
 
-    private void observe(Observable o) {
-        o.addObserver(this);
-    }
-
+    @SuppressWarnings("unchecked")
     @Override
-    public void update(Observable o, Object arg) {
-        List<Integer> keys = ((MidiSplitter) o).getPressedKeys();
-        piano.clearHighlights();
-        colorKeys();
-        keys.forEach(k -> piano.highlight(k, Color.LIGHTGRAY));
+    public void propertyChange(PropertyChangeEvent evt) {
+        if (evt.getPropertyName() == "pressedKeys") {
+            List<Integer> keys = (List<Integer>) evt.getNewValue();
+            piano.clearHighlights();
+            colorKeys();
+            keys.forEach(k -> piano.highlight(k, Color.LIGHTGRAY));
+        }
     }
 }
